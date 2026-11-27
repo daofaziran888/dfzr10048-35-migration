@@ -5,6 +5,7 @@ from typing import Any
 import hashlib
 
 from app.services.base import BaseModuleService
+from app.services.signoff import signoff_registry
 from app.store import store
 
 
@@ -47,6 +48,10 @@ class SubtitlePackService(BaseModuleService):
         """获取指定媒体源的所有字幕包。"""
         rows = store.rows(self.MODULE)
         return [r for r in rows if r.get("关联媒体源") == media_id]
+
+    def verification_result(self, pack_id: str) -> dict[str, Any] | None:
+        """读取服务端统一的签收核验结论，与交付回执共用同一份。"""
+        return signoff_registry.shared_result(pack_id)
 
     def mark_invalid(self, pack_id: str) -> tuple[bool, str]:
         """标记字幕包为失效（版本被覆盖后）。"""

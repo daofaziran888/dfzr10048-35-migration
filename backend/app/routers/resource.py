@@ -91,6 +91,23 @@ def create_entry(module: str, payload: EntryPayload) -> ActionResult:
     return ActionResult(ok=True, message=f"{service.ENTITY}已登记", entry=entry)
 
 
+@router.get("/{module}/{entry_id}/verification", response_model=dict)
+def get_entry_verification(module: str, entry_id: int) -> dict[str, Any]:
+    """字幕包与交付回执共用的服务端签收核验结论，按各自关联关系取同一条结果。"""
+    service = require_service(module)
+    resolver = getattr(service, "verification_result", None)
+    if resolver is None:
+        raise HTTPException(status_code=404, detail=f"{service.ENTITY}不提供签收核验结论")
+    entry = service.get_entry(entry_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail=f"{service.ENTITY} {entry_id} 不存在或已归档")
+    key = entry.get("字幕包编号") or entry.get("回执编号") or str(entry_id)
+    result = resolver(str(key))
+    if result is None:
+        return {"ok": False, "message": "尚无服务端核验结论", "shared": True}
+    return result
+
+
 @router.post("/{module}/{entry_id}/actions", response_model=ActionResult)
 def run_action(module: str, entry_id: int, payload: ActionPayload) -> ActionResult:
     service = require_service(module)

@@ -1,12 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import Overview from '@/views/Overview.vue'
+import SignoffView from '@/views/SignoffView.vue'
 import WorkbenchView from '@/views/WorkbenchView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', name: 'overview', component: Overview },
+    { path: '/signoff_migration', name: 'signoff_migration', component: SignoffView },
     { path: '/:moduleKey', name: 'module', component: WorkbenchView, props: true },
   ],
 })

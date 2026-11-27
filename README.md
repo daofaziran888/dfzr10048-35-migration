@@ -81,5 +81,21 @@ npm run dev
 - 列表接口统一返回 `{ items, total, page, size }`，动作接口统一返回 `{ ok, message }`。
 - 状态流转只允许在 `app/services` 里改，路由层不做业务判断。
 
+## 字幕包历史签收迁移（V2 交付清单）
+
+`backend/app/services/signoff.py` + `backend/app/routers/signoff.py` +
+`frontend/src/views/SignoffView.vue`（导航入口「历史签收迁移」）。
+
+- 现有装配流程只产生八位校验；迁移把旧签收升级为逐文件、逐字幕行的 V2 交付清单，
+  原包号、八位旧校验、实际来源与签收时逐文件指纹始终保留，
+  `GET /api/signoff/packs/{原包号}/legacy` 在部署切换与回滚后仍可读。
+- V1 原件存内容寻址库，同位置的 V2 更正只写工作区，永不覆盖签收原件；
+  `GET .../originals/{文件名}` 只返回字节与签收指纹一致的原件，否则 409 并给出缺失环节。
+- 复验 `POST .../verify` 允许先于迁移确认到达：字节一致先排队、确认后自动完成；
+  字节不符当场判「核验不符」。同名 V2 更正文件不可代验 V1。
+- 每个原包号最多一份 V2 清单；回滚只停用，切回复用同一份，旧核验结论随回滚失效。
+- 字幕包与交付回执都读 `shared_result`（`GET /api/{module}/{id}/verification`），
+  交付回执在无有效服务端结论时不能单独确认签收。
+
 领域：数据工程
 子方向：数据采集、爬虫与RPA
